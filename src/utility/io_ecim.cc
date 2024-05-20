@@ -3,6 +3,7 @@
 //
 
 #include "io_ecim.hpp"
+#include <filesystem>
 
 namespace xrsfm {
 
@@ -12,17 +13,12 @@ void ReadCamerasBinary(const std::string &path,
     CHECK(file.is_open()) << path;
 
     const uint64_t num_camera = read_data2<uint64_t>(file);
-
     for (int i = 0; i < num_camera; ++i) {
-        uint32_t camera_id = -1, camera_model = -1;
-        read_data(file, camera_id);
-        read_data(file, camera_model);
+        const uint32_t camera_id = read_data2<uint32_t>(file);
+        const uint32_t camera_model = read_data2<uint32_t>(file);
         Camera camera(camera_id, camera_model);
-
-        uint64_t w = 0, h = 0; // TODO set w,h in camera
-        read_data(file, w);
-        read_data(file, h);
-
+        camera.width_ = read_data2<uint64_t>(file);
+        camera.height_ = read_data2<uint64_t>(file);
         read_data_vec(file, camera.params_.data(), camera.params_.size());
         cameras[camera_id] = camera;
     }
@@ -79,14 +75,22 @@ void ReadPoints3DBinary(const std::string &path, std::map<int, Track> &tracks) {
             read_data(file, p2d_id);
             track.observations_[frame_id] = p2d_id;
         }
+        track.outlier = false;
         tracks[id] = track;
     }
 }
 
-void ReadColMapDataBinary(const std::string &output_path, Map &map) {
+bool ReadColMapDataBinary(const std::string &output_path, Map &map) {
+    namespace fs = std::filesystem;
+    if (!(fs::exists(fs::path(output_path + "cameras.bin")) &&
+          fs::exists(fs::path(output_path + "images.bin")) &&
+          fs::exists(fs::path(output_path + "points3D.bin")))) {
+        return false;
+    }
     ReadCamerasBinary(output_path + "cameras.bin", map.camera_map_);
     ReadImagesBinary(output_path + "images.bin", map.frame_map_);
     ReadPoints3DBinary(output_path + "points3D.bin", map.track_map_);
+    return true;
 }
 
 void ReadImagesBinaryForTriangulation(const std::string &path,
@@ -110,13 +114,10 @@ void ReadImagesBinaryForTriangulation(const std::string &path,
             pt.y = read_data2<double>(file);
         }
         for (size_t i = 0; i < num_p2d; ++i) {
-            // Eigen::Vector<float, 256> desc;
             std::vector<float> desc(feature_dim);
             read_data_vec(file, desc.data(), feature_dim);
         }
         frames[frame.id] = frame;
-        // std::cout<<frame.id<<" "<<frame.name<<"
-        // "<<frame.points.size()<<std::endl;
     }
 }
 
@@ -293,6 +294,10 @@ void WritePoints3DBinary2(const std::string &path,
 }
 
 void WriteColMapDataBinary2(const std::string &output_path, const Map &map) {
+    namespace fs = std::experimental::filesystem;
+    if (!fs::is_directory(output_path)) {
+        fs::create_directories(output_path);
+    }
     WriteCamerasBinary(output_path + "cameras.bin", map.camera_map_);
     WriteImagesBinary2(output_path + "images.bin", map.frame_map_);
     WritePoints3DBinary2(output_path + "points3D.bin", map.track_map_);

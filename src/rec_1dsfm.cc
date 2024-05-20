@@ -7,7 +7,6 @@
 #include "utility/io_ecim.hpp"
 #include "utility/io_feature.hpp"
 #include "utility/timer.h"
-// #include "utility/viewer.h"
 
 using namespace xrsfm;
 
@@ -31,7 +30,6 @@ void PreProcess(const std::string bin_path, Map &map) {
         const auto &camera = cameras.at(frame.camera_id);
         const int num_points = frame.keypoints_.size();
         frame.points.clear();
-        // frame.points_normalized.clear();
         frame.uint_descs_.resize(0, 0);
         frame.track_ids_.assign(num_points, -1);
         for (const auto &kpt : frame.keypoints_) {
@@ -39,12 +37,10 @@ void PreProcess(const std::string bin_path, Map &map) {
             Eigen::Vector2d ept(pt.x, pt.y), eptn;
             ImageToNormalized(camera, ept, eptn);
             frame.points.emplace_back(ept);
-            // frame.points_normalized.emplace_back(eptn);
         }
     }
 
     for (int i = 0; i < cameras.size(); ++i) {
-        std::cout << i << " " << cameras.size() << std::endl;
         auto &camera = cameras[i];
         // camera.log();
         // if distortion parameters of the camera are not estimated, the camera
@@ -59,7 +55,7 @@ void PreProcess(const std::string bin_path, Map &map) {
     map.frame_pairs_ = frame_pairs;
     map.RemoveRedundancyPoints();
     map.Init();
-    printf("Num Frames: %d Num Pairs %d\n", map.frames_.size(),
+    printf("Num Frames: %d Num Pairs %d\n", map.NumFrames(),
            map.frame_pairs_.size());
 }
 

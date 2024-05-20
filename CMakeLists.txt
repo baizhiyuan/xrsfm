@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(xrsfm)
 
-option(XRPRIMER_ENABLED "Buinding based on XRPRIMER, if available" ON)
+option(XRPRIMER_ENABLED "Buinding based on XRPRIMER, if available" OFF)
 option(CUDA_ENABLED "Whether to enable CUDA, if available" ON)
 set(CUDA_ARCHS "Auto" CACHE STRING "List of CUDA architectures for which to \
 generate code, e.g., Auto, All, Maxwell, Pascal, ...")
@@ -28,10 +28,16 @@ find_package(OpenGL REQUIRED)
 
 find_package(GLEW REQUIRED)
 
+find_package(Qt5 5.4 COMPONENTS Core OpenGL Widgets)
+
+set(CUDA_MIN_VERSION "7.0")
 if (CUDA_ENABLED)
-    find_package(CUDA ${CUDA_MIN_VERSION} QUIET)
-    message(STATUS "found")
+    find_package(CUDA QUIET)
+    message(STATUS "Found CUDA ")
+    message(STATUS "  Includes : ${CUDA_INCLUDE_DIRS}")
+    message(STATUS "  Libraries : ${CUDA_LIBRARIES}")
 endif ()
+
 
 ################################################################################
 # Compiler specific configuration
@@ -53,10 +59,9 @@ endif ()
 if (CUDA_FOUND)
     if (CUDA_ENABLED)
         add_definitions("-DCUDA_ENABLED")
-
-        include(${CMAKE_CURRENT_SOURCE_DIR}/SelectCudaComputeArch.cmake)
-
-        CUDA_SELECT_NVCC_ARCH_FLAGS(CUDA_ARCH_FLAGS ${CUDA_ARCHS})
+        if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+            set(CMAKE_CUDA_ARCHITECTURES "native")
+        endif()
 
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${CUDA_ARCH_FLAGS}")
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D_FORCE_INLINES")
@@ -67,7 +72,8 @@ if (CUDA_FOUND)
         add_definitions("-D_MWAITXINTRIN_H_INCLUDED")
 
         message(STATUS "Enabling CUDA support (version: ${CUDA_VERSION_STRING},"
-                " archs: ${CUDA_ARCH_FLAGS_readable})")
+                " archs: ${CMAKE_CUDA_ARCHITECTURES})")
+
     else ()
         set(CUDA_FOUND OFF)
         message(STATUS "Disabling CUDA support")
@@ -98,6 +104,7 @@ add_library(xrsfm
         src/base/map.cc
 
         src/feature/sift_extractor.cc
+        src/feature/feature_processor.cc
         src/feature/feature_extraction.cc
         src/feature/feature_processing.cc
         src/feature/match_expansion.cc
@@ -108,49 +115,62 @@ add_library(xrsfm
 
         src/geometry/pnp.cc
         src/geometry/essential.cc
-        src/geometry/triangluate_svd.cc
+        src/geometry/triangulate_light.cc
         src/geometry/track_processor.cc
-
-        src/geometry/colmap/base/triangulation.cc
-        src/geometry/colmap/estimators/absolute_pose.cc
-        src/geometry/colmap/estimators/triangulation.cc
-        src/geometry/colmap/estimators/polynomial.cc
-        src/geometry/colmap/estimators/fundamental_matrix.cc
-        src/geometry/colmap/estimators/utils.cc
-        src/geometry/colmap/util/random.cc
-        src/geometry/colmap/optim/random_sampler.cc
-        src/geometry/colmap/optim/combination_sampler.cc
-        src/geometry/colmap/optim/support_measurement.cc
 
         src/optimization/ba_solver.cc
         src/mapper/incremental_mapper.cc
         src/utility/io_ecim.cc
+
+        src/colmap/estimators/absolute_pose.cc
+        src/colmap/estimators/polynomial.cc
+        src/colmap/estimators/fundamental_matrix.cc
+        src/colmap/ransac/random_sampler.cc
+        src/colmap/ransac/combination_sampler.cc
+        src/colmap/ransac/support_measurement.cc
+        src/colmap/ransac/random.cc
+        src/colmap/ui/point_painter.cc
+        src/colmap/ui/project_widget.cc
+        src/colmap/ui/model_viewer_widget.cc
+        src/colmap/ui/resources.qrc
         )
+
+
+qt5_add_resources(RESOURCES src/colmap/ui/resources.qrc)
 
 target_include_directories(xrsfm
         PUBLIC
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/geometry/colmap
+        ${CMAKE_SOURCE_DIR}/src/colmap
         ${CMAKE_SOURCE_DIR}/3rdparty/SiftGPU
         ${CMAKE_SOURCE_DIR}/3rdparty/apriltag
         ${EIGEN3_INCLUDE_DIRS}
+        ${Qt5Core_INCLUDE_DIRS}
+        ${Qt5OpenGL_INCLUDE_DIRS}
+        ${Qt5Widgets_INCLUDE_DIRS}
         )
 
 if(XRPRIMER_ENABLED)
     target_link_libraries(xrsfm
         stdc++fs
+        sift_gpu
         XRPrimer::xrprimer
         ${OpenCV_LIBS}
         ${GTEST_LIBRARIES}
-        sift_gpu
+        ${Qt5Core_LIBRARIES}
+        ${Qt5OpenGL_LIBRARIES}
+        ${Qt5Widgets_LIBRARIES}
         )
 else ()
     target_link_libraries(xrsfm
         stdc++fs
+        sift_gpu
         ${OpenCV_LIBS}
         ${CERES_LIBRARIES}
-        sift_gpu
+        ${Qt5Core_LIBRARIES}
+        ${Qt5OpenGL_LIBRARIES}
+        ${Qt5Widgets_LIBRARIES}
         )
 endif()
 
@@ -174,3 +194,7 @@ target_link_libraries(rec_1dsfm xrsfm)
 
 add_executable(rec_kitti src/rec_kitti.cc)
 target_link_libraries(rec_kitti xrsfm)
+
+add_executable(xrsfm_gui src/xrsfm_gui.cc)
+target_link_libraries(xrsfm_gui xrsfm)
+target_sources(xrsfm_gui PRIVATE ${RESOURCES})
