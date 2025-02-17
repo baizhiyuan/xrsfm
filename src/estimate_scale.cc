@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     }
 
     // double tag_length = std::stod(argv[4]);
-    constexpr double tag_length = 0.113;
+    constexpr double tag_length = 0.160;
     tag_refine(images_path, map_path, tag_length, output_path);
     return 0;
 }

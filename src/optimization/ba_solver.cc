@@ -276,7 +276,7 @@ void BASolver::ScalePoseGraphUnorder(const LoopInfo &loop_info, Map &map,
     ceres::Solver::Options solver_options = InitSolverOptions();
     solver_options.minimizer_progress_to_stdout = true;
     solver_options.initial_trust_region_radius = 1e16;
-    // solver_options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+    // solver_options.linear_solver_type = ceres::ITERATIVE_SCHUR; //之前被注释了
     solver_options.trust_region_strategy_type = ceres::DOGLEG;
     ceres::Solver::Summary summary;
 
@@ -598,7 +598,7 @@ void BASolver::LBA(int frame_id, Map &map) {
     }
 
     ceres::Solver::Options solver_options = InitSolverOptions();
-    solver_options.max_num_iterations = 5;
+    solver_options.max_num_iterations = 5; // 5
     solver_options.function_tolerance = 1e-4;
     solver_options.parameter_tolerance = 1e-5;
     ceres::Solver::Summary summary;
@@ -677,9 +677,12 @@ void BASolver::KGBA(Map &map, const std::vector<int> fix_key_frame_ids,
     ceres::Solver::Options solver_options = InitSolverOptions();
     solver_options.minimizer_progress_to_stdout = true;
     solver_options.initial_trust_region_radius = 1e6;
-    solver_options.max_num_iterations = 20;
-    solver_options.function_tolerance = 1e-4;
-    solver_options.parameter_tolerance = 1e-5;
+    // solver_options.max_num_iterations = 20; // 20
+    // solver_options.function_tolerance = 1e-4;
+    // solver_options.parameter_tolerance = 1e-5;
+    solver_options.max_num_iterations = 50;
+    solver_options.function_tolerance = 1e-5;
+    solver_options.parameter_tolerance = 1e-6;
     ceres::Solver::Summary summary;
     ceres::Solve(solver_options, &problem, &summary);
     PrintSolverSummary(summary);
