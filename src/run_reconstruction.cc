@@ -13,15 +13,16 @@ void PreProcess(const std::string dir_path, const std::string camera_path,
                 Map &map) {
     std::vector<Frame> frames;
     std::vector<FramePair> frame_pairs;
-    ReadFeatures(dir_path + "ftr.bin", frames, true);
-    ReadFramePairs(dir_path + "fp.bin", frame_pairs);
+    ReadFeatures(dir_path + "ftr.bin", frames, true); // 读取特征文件
+    ReadFramePairs(dir_path + "fp.bin", frame_pairs); // 读取帧对文件
     std::cout << "ReadFramePairs\n";
 
     // set cameras & image name
     std::map<int, Camera> cameras = ReadCamerasText(camera_path);
-    CHECK_EQ(cameras.size(), 1);
-    const int camera_id = cameras.begin()->first;
+    CHECK_EQ(cameras.size(), 1);                  // 确保只有一个相机
+    const int camera_id = cameras.begin()->first; // 获取相机ID
 
+    // 设置每一帧的相机ID
     for (auto &frame : frames) {
         frame.camera_id = camera_id;
     }
@@ -29,21 +30,22 @@ void PreProcess(const std::string dir_path, const std::string camera_path,
     // convert keypoint to points(for reconstruction)
     for (auto &frame : frames) {
         const int num_points = frame.keypoints_.size();
-        frame.points.clear();
-        frame.track_ids_.assign(num_points, -1);
+        frame.points.clear();   // 清空之前的点
+        frame.track_ids_.assign(num_points, -1);    // 初始化跟踪ID为-1
         for (const auto &kpt : frame.keypoints_) {
             const auto &pt = kpt.pt;
             Eigen::Vector2d ept(pt.x, pt.y), eptn;
-            frame.points.push_back(ept);
+            frame.points.push_back(ept);    // 将关键点转换为二维点并添加到帧中
         }
     }
 
+    // 将相机信息、帧和帧对添加到地图中
     map.camera_map_ = cameras;
     map.frames_ = frames;
     map.frame_pairs_ = frame_pairs;
 
-    map.RemoveRedundancyPoints();
-    map.Init();
+    map.RemoveRedundancyPoints();   // 删除冗余点
+    map.Init();                     // 初始化地图
 }
 
 int main(int argc, char *argv[]) {
@@ -79,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     // 2. Map PreProcess
     Map map;
-    PreProcess(bin_path, camera_path, map);
+    PreProcess(bin_path, camera_path, map);  // 地图预处理
     std::cout << "PreProcess Done!" << std::endl;
 
     // 3. Map Reconstruction

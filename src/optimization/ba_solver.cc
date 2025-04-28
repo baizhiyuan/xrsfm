@@ -648,7 +648,7 @@ void BASolver::GBA(Map &map, bool accurate, bool fix_all_frames) {
     ceres::Solve(solver_options, &problem, &summary);
     PrintSolverSummary(summary);
 }
-
+// 优化 BA
 void BASolver::KGBA(Map &map, const std::vector<int> fix_key_frame_ids,
                     const bool is_sequential_data) {
     KeyFrameSelection(map, fix_key_frame_ids, is_sequential_data);

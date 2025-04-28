@@ -1,10 +1,11 @@
 import os
 from argparse import ArgumentParser
 
-seq_name_list = [
-    '00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'
-]
+# seq_name_list = [
+#     '00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'
+# ]
 
+seq_name_list = ['08']
 
 def get_opts():
     parser = ArgumentParser()

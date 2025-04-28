@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     const std::string seq_path = data_path + seq_name + "/";
     std::map<std::string, int> name2camera_id = {
         {"00", 0}, {"01", 0}, {"02", 0}, {"03", 1}, {"04", 2}, {"05", 2},
-        {"06", 2}, {"07", 2}, {"08", 2}, {"09", 2}, {"10", 2}};
+        {"06", 2}, {"07", 2}, {"08", 2}, {"09", 2}, {"10", 2}, {"19", 1}};
     CHECK(name2camera_id.count(seq_name) != 0) << "NO suitable camera param.";
     const int camera_param_id = name2camera_id[seq_name];
 
