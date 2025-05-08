@@ -19,12 +19,12 @@ def add_color(image_dir, bin_dir):
             p3d_id = image.point3D_ids[i]
             if p3d_id == -1:
                 continue
-            # x, y = [int(xy_i) for xy_i in image.xys[i]]
+            x, y = [int(xy_i) for xy_i in image.xys[i]]
             # if x > w or x < 0 or y < 0 or y > h:
 
             # 用 round 而不是向下截断更贴近真实投影
-            x = int(round(image.xys[i][0]))
-            y = int(round(image.xys[i][1]))
+            # x = int(round(image.xys[i][0]))
+            # y = int(round(image.xys[i][1]))
 
             # 0 <= x <= w-1, 0 <= y <= h-1
             if x < 0 or x >= w or y < 0 or y >= h:

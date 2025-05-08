@@ -149,7 +149,7 @@ FeatureProcessor::GetInitId(const int num_image,
 }
 
 // 该函数执行顺序匹配，首先将相邻的图像帧配对，然后基于检索结果进行匹配，最终将所有匹配对存储在id_pairs中
-// todo: 需要增加双目之间的匹配
+// ToDo: 需要增加双目之间的匹配
 void FeatureProcessor::MatchingSeq(
     std::vector<Frame> &frames, const std::string &fp_path,
     const std::map<int, std::vector<int>> &id2rank,
